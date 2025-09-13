@@ -5,8 +5,16 @@ import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { io } from "socket.io-client";
 
-// Backend URL configuration
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://chat-app-server-developer-manish007s-projects.vercel.app";
+// Backend URL configuration - try multiple possible URLs
+const possibleUrls = [
+  import.meta.env.VITE_BACKEND_URL,
+  "https://chat-app-server-developer-manish007s-projects.vercel.app",
+  "https://server-developer-manish007s-projects.vercel.app",
+  "https://chat-app-backend.vercel.app",
+  "https://chat-app-server.vercel.app"
+];
+
+const backendUrl = possibleUrls.find(url => url) || "https://chat-app-server-developer-manish007s-projects.vercel.app";
 axios.defaults.baseURL = backendUrl;
 
 // Log backend URL for debugging

@@ -16,7 +16,7 @@ const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {  
     origin: process.env.NODE_ENV === "production" 
-      ? [process.env.CLIENT_URL || "https://your-client-vercel-url.vercel.app"] 
+      ? [process.env.CLIENT_URL || "https://chat-hjpmres07-developer-manish007s-projects.vercel.app"] 
       : ["http://localhost:5173", "http://localhost:3000"],
     credentials: true,
     methods: ["GET", "POST"]
@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
 app.use(express.json({ limit: "10mb" }));
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
-    ? [process.env.CLIENT_URL || "https://your-client-vercel-url.vercel.app"] 
+    ? [process.env.CLIENT_URL || "https://chat-hjpmres07-developer-manish007s-projects.vercel.app"] 
     : ["http://localhost:5173", "http://localhost:3000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -76,8 +76,12 @@ app.use(cors({
 }));
 
 //Routes setup
+app.get("/", (req, res) => {
+  res.json({ message: "Chat App Server is running!", status: "OK" });
+});
+
 app.use("/api/status", (req, res) => {
-  res.send("Server is running");
+  res.json({ message: "Server is running", status: "OK" });
 });
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
@@ -86,21 +90,14 @@ await connectDB();
 
 
 
-// For Vercel deployment
-if(process.env.NODE_ENV === "production") {
-  const PORT = process.env.PORT || 5000;
-  server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-} else {
-  // For local development
+// For Vercel, we only start the server in development
+if(process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 }
 
-// Export both app and server for Vercel
-export { app, server };
+// Export the app for Vercel (Vercel will handle the server startup)
 export default app;
 
