@@ -14,7 +14,11 @@ const server = http.createServer(app);
 
 // Initialize Socket.io server
 export const io = new Server(server, {
-  cors: {  origin: "*"}
+  cors: {  
+    origin: process.env.NODE_ENV === "production" 
+      ? ["https://your-client-vercel-url.vercel.app"] 
+      : ["http://localhost:5173", "http://localhost:3000"]
+  }
 });
 // Expose io and userSocketMap via app locals to avoid circular imports
 app.set("io", io);
