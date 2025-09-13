@@ -76,15 +76,37 @@ const updateProfile = async (body) => {
 
 
 
-  // connect socket funnction to handle socket connection and online users updates
+  // connect socket function to handle socket connection and online users updates
   const connectSocket = (userData) => {
     if (!userData || socket?.connected) return;
+    
+    console.log("Connecting to socket with backend URL:", backendUrl);
+    
     const newSocket = io(backendUrl, {
       query: { userId: userData._id },
+      transports: ["websocket", "polling"],
+      upgrade: true,
+      rememberUpgrade: true,
+      timeout: 20000,
+      forceNew: true
     });
-    newSocket.connect();
+    
+    newSocket.on("connect", () => {
+      console.log("Socket connected successfully with ID:", newSocket.id);
+    });
+    
+    newSocket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+    });
+    
+    newSocket.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
+    });
+    
     setSocket(newSocket);
+    
     newSocket.on("getOnlineUsers", (userIds) => {
+      console.log("Received online users:", userIds);
       setOnlineUsers(userIds);
     });
   };

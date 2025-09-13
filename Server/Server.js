@@ -16,9 +16,13 @@ const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {  
     origin: process.env.NODE_ENV === "production" 
-      ? ["https://your-client-vercel-url.vercel.app"] 
-      : ["http://localhost:5173", "http://localhost:3000"]
-  }
+      ? [process.env.CLIENT_URL || "https://your-client-vercel-url.vercel.app"] 
+      : ["http://localhost:5173", "http://localhost:3000"],
+    credentials: true,
+    methods: ["GET", "POST"]
+  },
+  transports: ["websocket", "polling"],
+  allowEIO3: true
 });
 // Expose io and userSocketMap via app locals to avoid circular imports
 app.set("io", io);
@@ -28,22 +32,33 @@ app.set("userSocketMap", userSocketMap);
 //store online users
 //store online users in userSocketMap
 
-//Socket.io conncetion handler
+//Socket.io connection handler
 io.on("connection", (socket) => {
-    
     const userId = socket.handshake.query.userId;
-    console.log("userConnected", userId);   
-   if  (userId) userSocketMap[userId] = socket.id;
+    console.log("User connected:", userId, "Socket ID:", socket.id);   
+    
+    if (userId) {
+        userSocketMap[userId] = socket.id;
+        console.log("User added to map:", userId, "Total online users:", Object.keys(userSocketMap).length);
+    }
 
-   //Emit online users to all connected clients
-   io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
-   socket.on("disconnect", () => {
-    console.log("userDisconnected", userId);   
-    delete userSocketMap[userId];
+    //Emit online users to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
-   })
-})
+
+    socket.on("disconnect", (reason) => {
+        console.log("User disconnected:", userId, "Reason:", reason);   
+        if (userId) {
+            delete userSocketMap[userId];
+            console.log("User removed from map:", userId, "Remaining online users:", Object.keys(userSocketMap).length);
+            //Emit updated online users list
+            io.emit("getOnlineUsers", Object.keys(userSocketMap));
+        }
+    });
+
+    socket.on("error", (error) => {
+        console.log("Socket error for user:", userId, "Error:", error);
+    });
+});
 
 
 
