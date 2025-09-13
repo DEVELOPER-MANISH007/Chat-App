@@ -21,8 +21,10 @@ export const io = new Server(server, {
     credentials: true,
     methods: ["GET", "POST"]
   },
-  transports: ["websocket", "polling"],
-  allowEIO3: true
+  transports: ["polling", "websocket"],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 // Expose io and userSocketMap via app locals to avoid circular imports
 app.set("io", io);
@@ -64,7 +66,14 @@ io.on("connection", (socket) => {
 
 // Middleware Setup
 app.use(express.json({ limit: "10mb" }));
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === "production" 
+    ? [process.env.CLIENT_URL || "https://your-client-vercel-url.vercel.app"] 
+    : ["http://localhost:5173", "http://localhost:3000"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "token"]
+}));
 
 //Routes setup
 app.use("/api/status", (req, res) => {

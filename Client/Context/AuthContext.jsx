@@ -84,11 +84,16 @@ const updateProfile = async (body) => {
     
     const newSocket = io(backendUrl, {
       query: { userId: userData._id },
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
       upgrade: true,
       rememberUpgrade: true,
       timeout: 20000,
-      forceNew: true
+      forceNew: true,
+      autoConnect: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      maxReconnectionAttempts: 5
     });
     
     newSocket.on("connect", () => {
@@ -97,6 +102,17 @@ const updateProfile = async (body) => {
     
     newSocket.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
+      toast.error("Connection failed. Retrying...");
+    });
+    
+    newSocket.on("reconnect", (attemptNumber) => {
+      console.log("Socket reconnected after", attemptNumber, "attempts");
+      toast.success("Connection restored!");
+    });
+    
+    newSocket.on("reconnect_error", (error) => {
+      console.error("Socket reconnection error:", error);
+      toast.error("Reconnection failed");
     });
     
     newSocket.on("disconnect", (reason) => {
