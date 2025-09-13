@@ -5,8 +5,11 @@ import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { io } from "socket.io-client";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 axios.defaults.baseURL = backendUrl;
+
+// Log backend URL for debugging
+console.log("Backend URL:", backendUrl);
 
  export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
@@ -18,19 +21,25 @@ export const AuthProvider = ({ children }) => {
   //check if user is authenticated and if so, set the user data and connect the socket
   const checkAuth = async () => {
     try {
+      console.log("Checking auth with backend URL:", backendUrl);
       const { data } = await axios.get("/api/auth/check");
       if (data.success) {
         setAuthUser(data.user);
         connectSocket(data.user);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Auth check error:", error);
+      // Don't show toast for auth check errors as it might be normal for unauthenticated users
+      if (error.response?.status !== 401) {
+        toast.error("Cannot connect to server. Please check your connection.");
+      }
     }
   };
 
   //Login function to handle user authentication and socket connection
   const login = async (state, Credential) => {
     try {
+      console.log("Attempting to login with backend URL:", backendUrl);
       const { data } = await axios.post(`/api/auth/${state}`, Credential);
       if (data.success) {
         setAuthUser(data.userData);
@@ -41,7 +50,12 @@ export const AuthProvider = ({ children }) => {
         toast.success(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("Login error:", error);
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        toast.error("Cannot connect to server. Please check your internet connection.");
+      } else {
+        toast.error(error.response?.data?.message || error.message || "Login failed");
+      }
     }
   };
 
