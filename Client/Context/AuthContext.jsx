@@ -5,7 +5,8 @@ import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { io } from "socket.io-client";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// Backend URL configuration
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://chat-app-server-developer-manish007s-projects.vercel.app";
 axios.defaults.baseURL = backendUrl;
 
 // Log backend URL for debugging
