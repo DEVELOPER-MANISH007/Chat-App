@@ -4,8 +4,7 @@
   "main": "Server.js",
   "scripts": {
     "server": "nodemon Server.js",
-    "start": "node Server.js",
-    "build": "echo 'No build step required for Node.js server'"
+    "start": "node Server.js"
   },
   "type": "module",
   "keywords": [],
