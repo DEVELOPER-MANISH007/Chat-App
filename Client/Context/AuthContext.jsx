@@ -12,6 +12,47 @@ axios.defaults.baseURL = backendUrl;
 // Log backend URL for debugging
 console.log("Backend URL:", backendUrl);
 
+// Test server connection immediately
+const testServer = async () => {
+  try {
+    console.log("Testing server connection...");
+    const response = await fetch(`${backendUrl}/api/status`);
+    const data = await response.text();
+    console.log("Server response:", data);
+    if (response.ok) {
+      console.log("✅ Server is working!");
+    } else {
+      console.log("❌ Server returned error:", response.status);
+    }
+  } catch (error) {
+    console.log("❌ Server connection failed:", error.message);
+    console.log("Trying alternative URLs...");
+    
+    // Try alternative URLs
+    const alternatives = [
+      "https://chat-app-server.vercel.app",
+      "https://server-developer-manish007s-projects.vercel.app",
+      "https://chat-app-backend.vercel.app"
+    ];
+    
+    for (const altUrl of alternatives) {
+      try {
+        const response = await fetch(`${altUrl}/api/status`);
+        if (response.ok) {
+          console.log("✅ Found working server:", altUrl);
+          axios.defaults.baseURL = altUrl;
+          break;
+        }
+      } catch (e) {
+        console.log("❌ Failed:", altUrl);
+      }
+    }
+  }
+};
+
+// Test server on load
+testServer();
+
  export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
