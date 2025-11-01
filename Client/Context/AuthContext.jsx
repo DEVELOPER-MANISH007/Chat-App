@@ -5,8 +5,8 @@ import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { io } from "socket.io-client";
 
-// Backend URL configuration - localhost only
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// Backend URL configuration - localhost only (hardcoded for development)
+const backendUrl = "http://localhost:5000";
 axios.defaults.baseURL = backendUrl;
 
  export const AuthContext = createContext();
@@ -103,31 +103,41 @@ const updateProfile = async (body) => {
   const connectSocket = (userData) => {
     if (!userData || socket?.connected) return;
     
+    // Disconnect old socket if exists
+    if (socket) {
+      socket.disconnect();
+    }
+    
     const newSocket = io(backendUrl, {
       query: { userId: userData._id },
       transports: ["polling", "websocket"],
       upgrade: true,
       rememberUpgrade: true,
-      timeout: 20000,
+      timeout: 5000,
       forceNew: true,
       autoConnect: true,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      maxReconnectionAttempts: 5
+      reconnectionDelay: 2000,
+      reconnectionAttempts: 3,
+      maxReconnectionAttempts: 3
     });
     
-    newSocket.on("connect_error", (error) => {
-      // Silent error handling - socket will auto-retry
-      // Only log for debugging, don't show toast
+    let reconnectAttempts = 0;
+    
+    newSocket.on("connect_error", () => {
+      reconnectAttempts++;
+      // Stop reconnection after max attempts
+      if (reconnectAttempts >= 3) {
+        newSocket.disconnect();
+      }
     });
     
-    newSocket.on("reconnect", () => {
-      // Silent reconnect - connection restored automatically
+    newSocket.on("connect", () => {
+      reconnectAttempts = 0; // Reset on successful connection
     });
     
-    newSocket.on("reconnect_error", (error) => {
-      // Silent error - socket will keep trying
+    newSocket.on("disconnect", () => {
+      // Don't show errors on disconnect
     });
     
     setSocket(newSocket);
