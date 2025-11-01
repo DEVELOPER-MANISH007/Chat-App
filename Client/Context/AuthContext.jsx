@@ -118,17 +118,16 @@ const updateProfile = async (body) => {
     });
     
     newSocket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      toast.error("Connection failed. Retrying...");
+      // Silent error handling - socket will auto-retry
+      // Only log for debugging, don't show toast
     });
     
     newSocket.on("reconnect", () => {
-      toast.success("Connection restored!");
+      // Silent reconnect - connection restored automatically
     });
     
     newSocket.on("reconnect_error", (error) => {
-      console.error("Socket reconnection error:", error);
-      toast.error("Reconnection failed");
+      // Silent error - socket will keep trying
     });
     
     setSocket(newSocket);
