@@ -34,13 +34,12 @@ export const signup = async (req, res) => {
       message: "User Created Successfully",
     });
   } catch (error) {
-    console.log(error.message);
+    console.error("Error in signup:", error.message);
     res.json({ success: false, message: error.message });
   }
 };
 
-//Controller to login a user
-
+// Controller to login a user
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -60,7 +59,7 @@ export const login = async (req, res) => {
       message: "User Logged In Successfully",
     });
   } catch (error) {
-    console.log(error.message);
+    console.error("Error in login:", error.message);
     res.json({
       success: false,
       message: error.message,
@@ -68,14 +67,12 @@ export const login = async (req, res) => {
   }
 };
 
-//Controller to check if user is authenticated
-
+// Controller to check if user is authenticated
 export const checkAuth = (req, res) => {
   res.json({ success: true, user: req.user });
 };
 
-// conroller to Update user profile
-
+// Controller to update user profile
 export const updateProfile = async (req, res) => {
   try {
     const { fullName, bio, profilePic } = req.body;
@@ -101,7 +98,7 @@ export const updateProfile = async (req, res) => {
       message: "Profile Updated Successfully",
     });
   } catch (error) {
-    console.log(error.message);
+    console.error("Error updating profile:", error.message);
     res.json({
       success: false,
       message: error.message,

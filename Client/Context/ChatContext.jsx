@@ -15,8 +15,7 @@ export const ChatProvider = ({ children }) => {
 
   const { socket, axios } = useContext(AuthContext);
 
-  //fuction to get all users for sidebar
-
+  // Function to get all users for sidebar
   const getUsers = async () => {
     try {
       const { data } = await axios.get("/api/messages/users");
@@ -29,7 +28,7 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  //function to get messages for seleceted user
+  // Function to get messages for selected user
   const getMessages = async (userId) => {
     try {
       const { data } = await axios.get(`/api/messages/${userId}`);
@@ -42,7 +41,7 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  //fucntion to send message to selected user
+  // Function to send message to selected user
   const sendMessage = async (messageData) => {
     try {
       const { data } = await axios.post(
@@ -89,7 +88,8 @@ export const ChatProvider = ({ children }) => {
     return () => {
       unsubscribeFromMessages();
     };
-  }, [socket,selectedUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, selectedUser]);
 
   const value = {
     message,

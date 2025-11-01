@@ -5,61 +5,9 @@ import toast from "react-hot-toast";
 import { useEffect } from "react";
 import { io } from "socket.io-client";
 
-// Backend URL configuration - try multiple possible URLs
-const possibleUrls = [
-  import.meta.env.VITE_BACKEND_URL,
-  "https://chat-app-server-developer-manish007s-projects.vercel.app",
-  "https://server-developer-manish007s-projects.vercel.app",
-  "https://chat-app-backend.vercel.app",
-  "https://chat-app-server.vercel.app"
-];
-
-const backendUrl = possibleUrls.find(url => url) || "https://chat-app-server-developer-manish007s-projects.vercel.app";
+// Backend URL configuration - localhost only
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 axios.defaults.baseURL = backendUrl;
-
-// Log backend URL for debugging
-console.log("Backend URL:", backendUrl);
-
-// Test server connection immediately
-const testServer = async () => {
-  try {
-    console.log("Testing server connection...");
-    const response = await fetch(`${backendUrl}/api/status`);
-    const data = await response.text();
-    console.log("Server response:", data);
-    if (response.ok) {
-      console.log("✅ Server is working!");
-    } else {
-      console.log("❌ Server returned error:", response.status);
-    }
-  } catch (error) {
-    console.log("❌ Server connection failed:", error.message);
-    console.log("Trying alternative URLs...");
-    
-    // Try alternative URLs
-    const alternatives = [
-      "https://chat-app-server.vercel.app",
-      "https://server-developer-manish007s-projects.vercel.app",
-      "https://chat-app-backend.vercel.app"
-    ];
-    
-    for (const altUrl of alternatives) {
-      try {
-        const response = await fetch(`${altUrl}/api/status`);
-        if (response.ok) {
-          console.log("✅ Found working server:", altUrl);
-          axios.defaults.baseURL = altUrl;
-          break;
-        }
-      } catch (e) {
-        console.log("❌ Failed:", altUrl);
-      }
-    }
-  }
-};
-
-// Test server on load
-testServer();
 
  export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
@@ -71,7 +19,6 @@ export const AuthProvider = ({ children }) => {
   //check if user is authenticated and if so, set the user data and connect the socket
   const checkAuth = async () => {
     try {
-      console.log("Checking auth with backend URL:", backendUrl);
       const { data } = await axios.get("/api/auth/check");
       if (data.success) {
         setAuthUser(data.user);
@@ -89,7 +36,6 @@ export const AuthProvider = ({ children }) => {
   //Login function to handle user authentication and socket connection
   const login = async (state, Credential) => {
     try {
-      console.log("Attempting to login with backend URL:", backendUrl);
       const { data } = await axios.post(`/api/auth/${state}`, Credential);
       if (data.success) {
         setAuthUser(data.userData);
@@ -144,8 +90,6 @@ const updateProfile = async (body) => {
   const connectSocket = (userData) => {
     if (!userData || socket?.connected) return;
     
-    console.log("Connecting to socket with backend URL:", backendUrl);
-    
     const newSocket = io(backendUrl, {
       query: { userId: userData._id },
       transports: ["polling", "websocket"],
@@ -160,17 +104,12 @@ const updateProfile = async (body) => {
       maxReconnectionAttempts: 5
     });
     
-    newSocket.on("connect", () => {
-      console.log("Socket connected successfully with ID:", newSocket.id);
-    });
-    
     newSocket.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
       toast.error("Connection failed. Retrying...");
     });
     
-    newSocket.on("reconnect", (attemptNumber) => {
-      console.log("Socket reconnected after", attemptNumber, "attempts");
+    newSocket.on("reconnect", () => {
       toast.success("Connection restored!");
     });
     
@@ -179,14 +118,9 @@ const updateProfile = async (body) => {
       toast.error("Reconnection failed");
     });
     
-    newSocket.on("disconnect", (reason) => {
-      console.log("Socket disconnected:", reason);
-    });
-    
     setSocket(newSocket);
     
     newSocket.on("getOnlineUsers", (userIds) => {
-      console.log("Received online users:", userIds);
       setOnlineUsers(userIds);
     });
   };
@@ -196,7 +130,8 @@ const updateProfile = async (body) => {
       axios.defaults.headers.common["token"] = token;
     }
     checkAuth();
-  },[token]);                   // yaha se token ht skta hai err ayega to
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const value = {
     axios,
