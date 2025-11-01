@@ -18,6 +18,11 @@ export const AuthProvider = ({ children }) => {
 
   //check if user is authenticated and if so, set the user data and connect the socket
   const checkAuth = async () => {
+    // Only check auth if token exists
+    if (!token) {
+      return;
+    }
+    
     try {
       const { data } = await axios.get("/api/auth/check");
       if (data.success) {
@@ -25,9 +30,17 @@ export const AuthProvider = ({ children }) => {
         connectSocket(data.user);
       }
     } catch (error) {
-      console.error("Auth check error:", error);
-      // Don't show toast for auth check errors as it might be normal for unauthenticated users
+      // 401 is normal when token is invalid/expired - handle silently
+      if (error.response?.status === 401) {
+        // Clear invalid token
+        localStorage.removeItem("token");
+        setToken(null);
+        setAuthUser(null);
+        return;
+      }
+      // Only show error for other issues
       if (error.response?.status !== 401) {
+        console.error("Auth check error:", error);
         toast.error("Cannot connect to server. Please check your connection.");
       }
     }
@@ -128,8 +141,13 @@ const updateProfile = async (body) => {
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["token"] = token;
+      checkAuth();
+    } else {
+      // Clear auth state if no token
+      setAuthUser(null);
+      setOnlineUsers([]);
+      socket?.disconnect();
     }
-    checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
